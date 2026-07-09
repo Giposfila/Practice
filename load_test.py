@@ -12,13 +12,13 @@ BASE_URL = "http://localhost:8000"
 CONCURRENCY = 25
 
 ENDPOINT_MIX = {
-    "list_books":    200,
-    "get_book":      150,
-    "create_book":   200,
-    "update_book":   150,
-    "delete_book":   150,
-    "list_authors":   75,
-    "list_genres":    75,
+    "list_books":    2000,
+    "get_book":      1500,
+    "create_book":   2000,
+    "update_book":   1500,
+    "delete_book":   1500,
+    "list_authors":   750,
+    "list_genres":    750,
 }
 
 BOOK_TEMPLATE = {
