@@ -80,7 +80,7 @@ async def create_books(session: aiohttp.ClientSession, count: int) -> list[str]:
                 book = await resp.json()
                 ids.append(book["id"])
             else:
-                print(f"  Failed to create seed book {i}: HTTP {resp.status}")
+                print(f"  Не удалось создать тестовую книгу {i}: HTTP {resp.status}")
     return ids
 
 
@@ -162,12 +162,12 @@ def print_stats(stats: dict[str, Stats], total_time: float):
     total_err = sum(s.errors for s in stats.values())
 
     print(f"\n{'='*86}")
-    print(f"  Total time: {total_time:.2f}s  |  Requests: {total_req}  |  "
-          f"Errors: {total_err} ({total_err/total_req*100:.1f}%)  |  "
+    print(f"  Общее время: {total_time:.2f}с  |  Запросов: {total_req}  |  "
+          f"Ошибок: {total_err} ({total_err/total_req*100:.1f}%)  |  "
           f"RPS: {total_req/total_time:.1f}")
     print(f"{'='*86}")
-    h = f"{'Endpoint':<22} {'Count':>6} {'Errors':>6} {'Min(ms)':>8} "
-    h += f"{'Avg(ms)':>8} {'Max(ms)':>8} {'P95(ms)':>8} {'P99(ms)':>8} {'RPS':>8}"
+    h = f"{'Эндпоинт':<22} {'Кол-во':>6} {'Ошибки':>6} {'Мин(мс)':>8} "
+    h += f"{'Ср(мс)':>8} {'Макс(мс)':>8} {'P95(мс)':>8} {'P99(мс)':>8} {'RPS':>8}"
     print(h)
     print("-" * 86)
     names = [
@@ -188,25 +188,25 @@ def print_stats(stats: dict[str, Stats], total_time: float):
 
 async def main():
     print("=" * 86)
-    print("  Load Test: Book Catalog API")
-    print(f"  Target: {BASE_URL}  |  Concurrency: {CONCURRENCY}")
+    print("  Нагрузочный тест: Book Catalog API")
+    print(f"  Цель: {BASE_URL}  |  Параллельность: {CONCURRENCY}")
     print("=" * 86)
 
     async with aiohttp.ClientSession(base_url=BASE_URL) as session:
-        print("\n[Setup] Creating seed books...")
+        print("\n[Подготовка] Создание тестовых книг...")
         all_ids = await create_books(session, 350)
         if len(all_ids) < 150:
-            print("ERROR: Not enough seed books created. Is the API running?")
+            print("ОШИБКА: Не удалось создать достаточно тестовых книг. API запущен?")
             sys.exit(1)
-        print(f"[Setup] Created {len(all_ids)} seed books")
+        print(f"[Подготовка] Создано {len(all_ids)} тестовых книг")
 
         read_ids = all_ids[:100]
         write_ids = all_ids[100:200]
         delete_ids = all_ids[200:]
 
-        print("[Setup] Building task queue...")
+        print("[Подготовка] Формирование очереди задач...")
         tasks = build_tasks(read_ids, write_ids, delete_ids)
-        print(f"[Setup] Task queue: {len(tasks)} requests")
+        print(f"[Подготовка] Очередь задач: {len(tasks)} запросов")
 
         stats = {name: Stats() for name in [
             "list_books", "get_book", "create_book",
@@ -215,7 +215,7 @@ async def main():
         sem = asyncio.Semaphore(CONCURRENCY)
         coros = [worker(sem, session, stats, t) for t in tasks]
 
-        print(f"\n[Running] Sending requests (concurrency={CONCURRENCY})...")
+        print(f"\n[Выполнение] Отправка запросов (параллельность={CONCURRENCY})...")
         t0 = time.monotonic()
         await asyncio.gather(*coros)
         total_time = time.monotonic() - t0
