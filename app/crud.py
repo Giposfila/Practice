@@ -1,6 +1,6 @@
 import time
 
-from sqlalchemy import select, delete
+from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Book
@@ -50,11 +50,12 @@ async def create_book(db: AsyncSession, data: BookCreate) -> Book:
 
 
 async def update_book(db: AsyncSession, book_id: str, data: BookUpdate) -> Book | None:
-    book = await get_book(db, book_id)
-    if not book:
-        return None
-    for field, value in data.model_dump(exclude_unset=True).items():
-        setattr(book, field, value)
+    values = data.model_dump(exclude_unset=True)
+    if not values:
+        return await get_book(db, book_id)
+    stmt = update(Book).where(Book.id == book_id).values(**values).returning(Book)
+    result = await db.execute(stmt)
+    book = result.scalar_one_or_none()
     await db.commit()
     return book
 
