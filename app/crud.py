@@ -34,7 +34,6 @@ async def create_book(db: AsyncSession, data: BookCreate) -> Book:
     book = Book(**data.model_dump())
     db.add(book)
     await db.commit()
-    await db.refresh(book)
     return book
 
 
@@ -45,7 +44,6 @@ async def update_book(db: AsyncSession, book_id: str, data: BookUpdate) -> Book 
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(book, field, value)
     await db.commit()
-    await db.refresh(book)
     return book
 
 
