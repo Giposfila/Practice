@@ -7,8 +7,8 @@ from app.config import settings
 engine = create_async_engine(
     settings.database_url,
     echo=False,
-    pool_size=20,
-    max_overflow=30,
+    pool_size=10,
+    max_overflow=10,
 )
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
@@ -24,6 +24,9 @@ async def get_db():
 
 async def init_db():
     async with engine.begin() as conn:
+        # Serialize concurrent init across uvicorn workers: parallel
+        # CREATE EXTENSION / CREATE INDEX race and fail on duplicates.
+        await conn.execute(text("SELECT pg_advisory_xact_lock(431906)"))
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm"))
         await conn.run_sync(Base.metadata.create_all)
         await conn.execute(text(
