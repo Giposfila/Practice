@@ -19,9 +19,9 @@ async def get_books(
             Book.title.ilike(f"%{search}%") | Book.description.ilike(f"%{search}%")
         )
     if author:
-        stmt = stmt.where(Book.author.ilike(f"%{author}%"))
+        stmt = stmt.where(Book.author == author)
     if genre:
-        stmt = stmt.where(Book.genre.ilike(f"%{genre}%"))
+        stmt = stmt.where(Book.genre == genre)
     stmt = stmt.order_by(Book.title).limit(limit).offset(offset)
     result = await db.execute(stmt)
     return list(result.scalars().all())
