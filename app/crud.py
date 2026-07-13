@@ -1,6 +1,7 @@
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.cache import cache
 from app.models import Book
 from app.schemas import BookCreate, BookUpdate
 
@@ -37,6 +38,7 @@ async def create_book(db: AsyncSession, data: BookCreate) -> Book:
     db.add(book)
     await db.commit()
     await db.refresh(book)
+    cache.invalidate()
     return book
 
 
@@ -48,20 +50,34 @@ async def update_book(db: AsyncSession, book_id: str, data: BookUpdate) -> Book 
         setattr(book, field, value)
     await db.commit()
     await db.refresh(book)
+    cache.invalidate()
     return book
 
 
 async def delete_book(db: AsyncSession, book_id: str) -> bool:
     result = await db.execute(delete(Book).where(Book.id == book_id))
     await db.commit()
-    return result.rowcount > 0
+    if result.rowcount > 0:
+        cache.invalidate()
+        return True
+    return False
 
 
 async def get_authors(db: AsyncSession) -> list[str]:
+    cached = cache.get("authors")
+    if cached is not None:
+        return cached
     result = await db.execute(select(Book.author).distinct().order_by(Book.author))
-    return [row[0] for row in result.all()]
+    authors = [row[0] for row in result.all()]
+    cache.set("authors", authors)
+    return authors
 
 
 async def get_genres(db: AsyncSession) -> list[str]:
+    cached = cache.get("genres")
+    if cached is not None:
+        return cached
     result = await db.execute(select(Book.genre).distinct().order_by(Book.genre))
-    return [row[0] for row in result.all()]
+    genres = [row[0] for row in result.all()]
+    cache.set("genres", genres)
+    return genres
