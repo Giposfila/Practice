@@ -22,9 +22,13 @@ async def list_books(
     search: str | None = Query(None, description="Search in title and description"),
     author: str | None = Query(None, description="Filter by author"),
     genre: str | None = Query(None, description="Filter by genre"),
+    limit: int = Query(50, ge=1, le=200, description="Max books to return"),
+    offset: int = Query(0, ge=0, description="Number of books to skip"),
     db: AsyncSession = Depends(get_db),
 ):
-    return await crud.get_books(db, search=search, author=author, genre=genre)
+    return await crud.get_books(
+        db, search=search, author=author, genre=genre, limit=limit, offset=offset
+    )
 
 
 @app.get("/books/{book_id}", response_model=BookResponse)

@@ -20,6 +20,8 @@ async def get_books(
     search: str | None = None,
     author: str | None = None,
     genre: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
 ) -> list[Book]:
     stmt = select(Book)
     if search:
@@ -30,7 +32,7 @@ async def get_books(
         stmt = stmt.where(Book.author.ilike(f"%{author}%"))
     if genre:
         stmt = stmt.where(Book.genre.ilike(f"%{genre}%"))
-    stmt = stmt.order_by(Book.title)
+    stmt = stmt.order_by(Book.title).limit(limit).offset(offset)
     result = await db.execute(stmt)
     return list(result.scalars().all())
 
